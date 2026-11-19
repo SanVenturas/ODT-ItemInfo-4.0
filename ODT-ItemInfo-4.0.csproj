@@ -16,10 +16,15 @@
         <PackageReference Include="SPTarkov.Common" Version="4.0.9" />
         <PackageReference Include="SPTarkov.DI" Version="4.0.9" />
         <PackageReference Include="SPTarkov.Server.Core" Version="4.0.9" />
+        <Content Update="config\**\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
     </ItemGroup>
 
     <PropertyGroup>
-        <SPTPath>F:\SPT_4.0\SPT</SPTPath>
+        <SPTPath Condition="'$(SPTPath)' == ''">F:\SPT_4.0\SPT</SPTPath>
+        <StagingDir Condition="'$(StagingDir)' == ''">D:\Staging Area\$(ProjectName)\SPT\user\mods\$(ProjectName)</StagingDir>
     </PropertyGroup>
 
     <Target Name="ForceBuild" BeforeTargets="CoreCompile" Inputs="" Outputs="" />
@@ -73,7 +78,6 @@
 
         <!-- Build the full staging path -->
         <PropertyGroup>
-            <StagingDir>D:\Staging Area\$(ProjectName)\SPT\user\mods\$(ProjectName)</StagingDir>
         </PropertyGroup>
 
         <!-- Create directory if missing -->

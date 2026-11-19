@@ -506,101 +506,56 @@ public class ItemInfo(
 			    {
 				    TemplateItemProperties ammoProps = itemProperties;
 
-				    ItemDescription[itemId].AdvancedAmmoInfoString = "Damage: " +
-				                                                     ammoProps.Damage +
-				                                                     "\nPenetration Power: " +
-				                                                     ammoProps.PenetrationPower +
-				                                                     "\nArmor Damage: " +
-				                                                     ammoProps.ArmorDamage +
-				                                                     (ammoProps.ProjectileCount > 1
-					                                                     ? "\nProjectile Count: " +
-					                                                       ammoProps.ProjectileCount
-					                                                     : "") +
-				                                                     (ammoProps.BuckshotBullets > 0
-					                                                     ? "\nBuckshot Bullets: " +
-					                                                       ammoProps.BuckshotBullets
-					                                                     : "") +
-				                                                     "\nInitial Speed: " +
-				                                                     ammoProps.InitialSpeed +
-				                                                     "\nSpeed Retardation: " +
-				                                                     ammoProps.SpeedRetardation +
-				                                                     "\nBallistic Coeficient: " +
-				                                                     ammoProps.BallisticCoeficient +
-				                                                     "\nAmmo Tooltip Class: " +
-				                                                     ammoProps.AmmoTooltipClass +
-				                                                     "\nFragmentation Chance: " +
-				                                                     (Math.Round((ammoProps.FragmentationChance ?? 0) *
-					                                                      100) + "%" +
-				                                                      (ammoProps.MaxFragmentsCount > 1
-					                                                      ? "\nMin Fragments Count: " +
-					                                                        ammoProps.MinFragmentsCount +
-					                                                        "\nMax Fragments Count: " +
-					                                                        ammoProps.MaxFragmentsCount
-					                                                      : "")) +
-				                                                     "\nRicochet Chance: " +
-				                                                     Math.Round((ammoProps.RicochetChance ?? 0) * 100) +
-				                                                     "%" +
-				                                                     "\nMisfire Chance: " +
-				                                                     Math.Round((ammoProps.MisfireChance ?? 0) * 100) +
-				                                                     "%" +
-				                                                     "\nMalf Feed Chance: " +
-				                                                     Math.Round((ammoProps.MalfFeedChance ?? 0) * 100) +
-				                                                     "%" +
-				                                                     "\nMalf Misfire Chance: " +
-				                                                     Math.Round(
-					                                                     (ammoProps.MalfMisfireChance ?? 0) * 100) +
-				                                                     "%" +
-				                                                     "\nDurability Burn Modificator: " +
-				                                                     ammoProps.DurabilityBurnModificator +
-				                                                     "\nHeat Factor: " +
-				                                                     ammoProps.HeatFactor +
-				                                                     "\nHeavy blleding Delta: " +
-				                                                     ammoProps.HeavyBleedingDelta +
-				                                                     "\nLight Bleeding Delta: " +
-				                                                     ammoProps.LightBleedingDelta +
-				                                                     "\nStamina Burn Per Damage: " +
-				                                                     ammoProps.StaminaBurnPerDamage +
-				                                                     (ammoProps.Tracer ?? false
-					                                                     ? "\nTracer: Yes" +
-					                                                       "\nTracer Color: " +
-					                                                       ammoProps.TracerColor +
-					                                                       "\nTracer Distance: " +
-					                                                       ammoProps.TracerDistance
-					                                                     : "Tracer: No") +
-				                                                     "\nPenetration Chance Obstacle: " +
-				                                                     ammoProps.PenetrationChanceObstacle +
-				                                                     "\nPenetration Damage Mod: " +
-				                                                     ammoProps.PenetrationDamageMod +
-				                                                     "\nPenetration Power Diviation: " +
-				                                                     ammoProps.PenetrationPowerDiviation +
-				                                                     "\nAccr(?): " +
-				                                                     ammoProps.AmmoAccr +
-				                                                     "\nDist(?): " +
-				                                                     ammoProps.AmmoDist +
-				                                                     "\nHear(?): " +
-				                                                     ammoProps.AmmoHear +
-				                                                     "\nRec(?): " +
-				                                                     ammoProps.AmmoRec +
-				                                                     "\nShift Chance(?): " +
-				                                                     ammoProps.AmmoShiftChance +
-				                                                     (ammoProps.ExplosionStrength > 0
-					                                                     ? "\nExplosion Strength: " +
-					                                                       ammoProps.ExplosionStrength +
-					                                                       "\nMax Explosion Distance: " +
-					                                                       ammoProps.MaxExplosionDistance +
-					                                                       "\nExplosion Type: " +
-					                                                       ammoProps.ExplosionType +
-					                                                       "\nHasGrenadeComponent: " +
-					                                                       ammoProps.HasGrenaderComponent
-					                                                     : "") +
-				                                                     "\nBullet Mass Gram: " +
-				                                                     ammoProps.BulletMassGram +
-				                                                     "\nBullet Diameter Millimeters: " +
-				                                                     ammoProps.BulletDiameterMilimeters +
-				                                                     "\nWeight: " +
-				                                                     ammoProps.Weight +
-				              
-				                                                     "\n\n";
+				    StringBuilder ammoInfo = new();
+				    ammoInfo.Append(i18n["Damage"]).Append(": ").Append(ammoProps.Damage)
+				            .Append("\n").Append(i18n["PenetrationPower"]).Append(": ").Append(ammoProps.PenetrationPower)
+				            .Append("\n").Append(i18n["ArmorDamage"]).Append(": ").Append(ammoProps.ArmorDamage);
+				    if (ammoProps.ProjectileCount > 1)
+					    ammoInfo.Append("\n").Append(i18n["ProjectileCount"]).Append(": ").Append(ammoProps.ProjectileCount);
+				    if (ammoProps.BuckshotBullets > 0)
+					    ammoInfo.Append("\n").Append(i18n["BuckshotBullets"]).Append(": ").Append(ammoProps.BuckshotBullets);
+				    ammoInfo.Append("\n").Append(i18n["InitialSpeed"]).Append(": ").Append(ammoProps.InitialSpeed)
+				            .Append("\n").Append(i18n["SpeedRetardation"]).Append(": ").Append(ammoProps.SpeedRetardation)
+				            .Append("\n").Append(i18n["BallisticCoefficient"]).Append(": ").Append(ammoProps.BallisticCoeficient)
+				            .Append("\n").Append(i18n["AmmoTooltipClass"]).Append(": ").Append(ammoProps.AmmoTooltipClass)
+				            .Append("\n").Append(i18n["FragmentationChance"]).Append(": ")
+				            .Append(Math.Round((ammoProps.FragmentationChance ?? 0) * 100)).Append("%");
+				    if (ammoProps.MaxFragmentsCount > 1)
+					    ammoInfo.Append("\n").Append(i18n["MinFragmentsCount"]).Append(": ").Append(ammoProps.MinFragmentsCount)
+					            .Append("\n").Append(i18n["MaxFragmentsCount"]).Append(": ").Append(ammoProps.MaxFragmentsCount);
+				    ammoInfo.Append("\n").Append(i18n["RicochetChance"]).Append(": ").Append(Math.Round((ammoProps.RicochetChance ?? 0) * 100)).Append("%")
+				            .Append("\n").Append(i18n["MisfireChance"]).Append(": ").Append(Math.Round((ammoProps.MisfireChance ?? 0) * 100)).Append("%")
+				            .Append("\n").Append(i18n["MalfFeedChance"]).Append(": ").Append(Math.Round((ammoProps.MalfFeedChance ?? 0) * 100)).Append("%")
+				            .Append("\n").Append(i18n["MalfMisfireChance"]).Append(": ").Append(Math.Round((ammoProps.MalfMisfireChance ?? 0) * 100)).Append("%")
+				            .Append("\n").Append(i18n["DurabilityBurnModifier"]).Append(": ").Append(ammoProps.DurabilityBurnModificator)
+				            .Append("\n").Append(i18n["HeatFactor"]).Append(": ").Append(ammoProps.HeatFactor)
+				            .Append("\n").Append(i18n["HeavyBleedingDelta"]).Append(": ").Append(ammoProps.HeavyBleedingDelta)
+				            .Append("\n").Append(i18n["LightBleedingDelta"]).Append(": ").Append(ammoProps.LightBleedingDelta)
+				            .Append("\n").Append(i18n["StaminaBurnPerDamage"]).Append(": ").Append(ammoProps.StaminaBurnPerDamage);
+				    if (ammoProps.Tracer ?? false)
+					    ammoInfo.Append("\n").Append(i18n["Tracer"]).Append(": ").Append(i18n["Yes"])
+					            .Append("\n").Append(i18n["TracerColor"]).Append(": ").Append(ammoProps.TracerColor)
+					            .Append("\n").Append(i18n["TracerDistance"]).Append(": ").Append(ammoProps.TracerDistance);
+				    else
+					    ammoInfo.Append("\n").Append(i18n["Tracer"]).Append(": ").Append(i18n["No"]);
+				    ammoInfo.Append("\n").Append(i18n["PenetrationChanceObstacle"]).Append(": ").Append(ammoProps.PenetrationChanceObstacle)
+				            .Append("\n").Append(i18n["PenetrationDamageMod"]).Append(": ").Append(ammoProps.PenetrationDamageMod)
+				            .Append("\n").Append(i18n["PenetrationPowerDeviation"]).Append(": ").Append(ammoProps.PenetrationPowerDiviation)
+				            .Append("\n").Append(i18n["AmmoAccr"]).Append(": ").Append(ammoProps.AmmoAccr)
+				            .Append("\n").Append(i18n["AmmoDist"]).Append(": ").Append(ammoProps.AmmoDist)
+				            .Append("\n").Append(i18n["AmmoHear"]).Append(": ").Append(ammoProps.AmmoHear)
+				            .Append("\n").Append(i18n["AmmoRec"]).Append(": ").Append(ammoProps.AmmoRec)
+				            .Append("\n").Append(i18n["AmmoShiftChance"]).Append(": ").Append(ammoProps.AmmoShiftChance);
+				    if (ammoProps.ExplosionStrength > 0)
+					    ammoInfo.Append("\n").Append(i18n["ExplosionStrength"]).Append(": ").Append(ammoProps.ExplosionStrength)
+					            .Append("\n").Append(i18n["MaxExplosionDistance"]).Append(": ").Append(ammoProps.MaxExplosionDistance)
+					            .Append("\n").Append(i18n["ExplosionType"]).Append(": ").Append(ammoProps.ExplosionType)
+					            .Append("\n").Append(i18n["HasGrenadeComponent"]).Append(": ").Append(ammoProps.HasGrenaderComponent);
+				    ammoInfo.Append("\n").Append(i18n["BulletMassGram"]).Append(": ").Append(ammoProps.BulletMassGram)
+				            .Append("\n").Append(i18n["BulletDiameterMillimeters"]).Append(": ").Append(ammoProps.BulletDiameterMilimeters)
+				            .Append("\n").Append(i18n["Weight"]).Append(": ").Append(ammoProps.Weight)
+				            .Append("\n\n");
+				    ItemDescription[itemId].AdvancedAmmoInfoString = ammoInfo.ToString();
 			    }
 		    }
 
@@ -693,7 +648,7 @@ public class ItemInfo(
 				                                          ? i18n["Fleaprice"] +
 				                                            ": " +
 				                                            (fleaPriceString == i18n["BANNED"]
-					                                            ? "BANNED"
+					                                            ? i18n["BANNED"]
 					                                            : Utils.FormatPrice(fleaPrice) +
 					                                              (fleaPrice > 0 ? "₽" : "")) +
 				                                            " | "
