@@ -147,6 +147,25 @@ public static class Utils
 	    }
     }
 
+    private static string? GetQuestName(string questId, string locale)
+    {
+	    string questNameKey = questId + " name";
+
+	    if (_locales.TryGetValue(locale, out Dictionary<string, string>? localeData) &&
+	        localeData.TryGetValue(questNameKey, out string? questName) &&
+	        !string.IsNullOrEmpty(questName))
+		    return questName;
+
+	    if (!string.Equals(locale, "en", StringComparison.OrdinalIgnoreCase) &&
+	        _locales.TryGetValue("en", out Dictionary<string, string>? enData) &&
+	        enData.TryGetValue(questNameKey, out string? enQuestName) &&
+	        !string.IsNullOrEmpty(enQuestName))
+		    return enQuestName;
+
+	    _logger.Warning("[ItemInfo] Missing quest locale: " + questNameKey);
+	    return null;
+    }
+
     public static string GetCraftingAreaName(int areaType, string locale = "en")
     {
 	    string stringName = "hideout_area_" + areaType + "_name";
@@ -984,12 +1003,11 @@ public static class Utils
 						if (requirement.QuestId is null)
 							break;
 
-						if (_locales[locale].ContainsKey(requirement.QuestId))
-						{
+						string? questName = GetQuestName(requirement.QuestId, locale);
+						if (questName is not null)
 							questReq.Clear().Append(" " +
-							                        _locales[locale][requirement.QuestId + " name"] +
+							                        questName +
 							                        "✔)");
-						}
 
 						break;
 				}
@@ -1163,16 +1181,17 @@ public static class Utils
 						case "QuestComplete":
 							if (string.IsNullOrEmpty(requirement.QuestId))
 								break;
-							
-							questReq += " (" +
-							            _locales[locale][requirement.QuestId + " name"] +
-							            "✔) ";
+
+							string? questName = GetQuestName(requirement.QuestId, locale);
+							if (questName is not null)
+								questReq += " (" + questName + "✔) ";
 							break;
 					}
 				}
-				
-				usedForCraftingComponentString =
-					usedForCraftingComponentString[..^3];
+
+				if (usedForCraftingComponentString.Length >= 3)
+					usedForCraftingComponentString =
+						usedForCraftingComponentString[..^3];
 				usedForCraftingComponentString += "  | Δ ≈ " +
 				                                  FormatPrice(Math.Round(
 					                                  (double)(GetFleaPrice(recipe.EndProduct) * recipe.Count -
