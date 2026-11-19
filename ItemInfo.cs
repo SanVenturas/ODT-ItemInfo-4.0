@@ -10,43 +10,52 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ItemInfo.Models;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Items;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Models.Logging;
 using SPTarkov.Server.Core.Models.Spt.Mod;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Services.Items;
+using SPTarkov.Server.Core.Services.Locales;
 using SPTarkov.Server.Core.Utils;
 
 namespace ItemInfo;
 
-public record ModMetadata : AbstractModMetadata
+public record ModMetadata : IModMetadata
 {
-    public override string ModGuid { get; init; } = "com.odt.iteminfo";
-    public override string Name { get; init; } = "ItemInfo";
-    public override string Author { get; init; } = "ODT";
-    public override List<string>? Contributors { get; init; }
-    public override SemanticVersioning.Version Version { get; init; } = new("2.0.14");
-    public override SemanticVersioning.Range SptVersion { get; init; } = new("~4.0.0");
-    public override List<string>? Incompatibilities { get; init; }
-    public override Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
-    public override string? Url { get; init; }
-    public override bool? IsBundleMod { get; init; }
-    public override string License { get; init; } = "MIT";
+    public string ModGuid { get; init; } = "com.odt.iteminfo";
+    public string Name { get; init; } = "ItemInfo";
+    public string Author { get; init; } = "ODT";
+    public List<string>? Contributors { get; init; }
+    public SemanticVersioning.Version Version { get; init; } = new("2.0.15");
+    public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
+    public bool HasPrepatcher { get; init; }
+    public List<string>? Incompatibilities { get; init; }
+    public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
+    public string? Url { get; init; }
+    public string License { get; init; } = "MIT";
 }
 
 // We want to load after PostDBModLoader is complete and all other mods, so we set our type priority to that, plus 200.
-[Injectable(TypePriority = OnLoadOrder.PostSptModLoader + 2)]
+[Injectable(TypePriority = OnLoadOrder.PostLoad)]
 public class ItemInfo(
 	ISptLogger<ItemInfo> logger, // We are injecting a logger similar to example 1, but notice the class inside <> is different
 	ModHelper modHelper,
 	JsonUtil jsonUtil,
-    DatabaseService databaseService,
+    TemplateTable templateTable,
+    GlobalTable globalTable,
+    HideoutTable hideoutTable,
+    TradersTable tradersTable,
+    LocaleTable localeTable,
     LocaleService localeService,
     ItemBaseClassService itemBaseClassService,
 	ItemHelper  itemHelper)
@@ -73,7 +82,7 @@ public class ItemInfo(
 	public string PathToMod { get; set; }
 	public Dictionary<MongoId, ModItemDescription> ItemDescription { get; set; } = new();
 	
-    public Task OnLoad()
+    public Task OnLoadAsync(CancellationToken cancellationToken)
     {
 	    PathToMod = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
 		
@@ -104,20 +113,24 @@ public class ItemInfo(
 	    }
 	    
 	    // Init vars
-	    EuroRatio = (double)databaseService.GetHandbook().Items.FirstOrDefault(item => item.Id == "569668774bdc2da2298b4568")!
+	    EuroRatio = (double)templateTable.Handbook.Items.FirstOrDefault(item => item.Id == "569668774bdc2da2298b4568")!
 		    .Price!;
-	    DollarRatio = (double)databaseService.GetHandbook().Items.FirstOrDefault(item => item.Id == "5696686a4bdc2da3298b456a")!
+	    DollarRatio = (double)templateTable.Handbook.Items.FirstOrDefault(item => item.Id == "5696686a4bdc2da3298b456a")!
 		    .Price!;
-	    Quests = databaseService.GetTemplates().Quests;
-	    Items = databaseService.GetTemplates().Items;
-	    Armors = databaseService.GetGlobals().Configuration.ArmorMaterials;
+	    Quests = templateTable.Quests;
+	    Items = templateTable.Items;
+	    Armors = globalTable.Configuration.ArmorMaterials;
 	    UserLocale = Config.UserLocale;
 	    i18n = Translation.Language[UserLocale];
 	    Localization = localeService.GetLocaleDb(UserLocale);
 	    BsgBlacklist = ModBsgBlackList.BsgBlackList;
 	    
         // Pass all the services and vars to Utils
-        Utils.Initialize(databaseService, 
+        Utils.Initialize(templateTable,
+						globalTable,
+						hideoutTable,
+						tradersTable,
+						localeTable,
 						localeService, 
 						itemBaseClassService, 
 						logger, 
@@ -130,9 +143,7 @@ public class ItemInfo(
 
         if (Config.Delay.Enabled)
         {
-	        logger.LogWithColor("[Item Info] Mod compatibility delay enabled (" + Config.Delay.Seconds + " seconds), waiting for other mods data to load...",
-								LogTextColor.Black,
-								LogBackgroundColor.Cyan);
+	        logger.Info("[Item Info] Mod compatibility delay enabled (" + Config.Delay.Seconds + " seconds), waiting for other mods data to load...");
 	        
 	        _timer = new Timer(_ =>
 	        {
@@ -170,21 +181,17 @@ public class ItemInfo(
 
 	    if (!Config.HideLanguageAlert)
 	    {
-		    logger.LogWithColor("[Item Info] This mod supports other languages! \n" +
+		    logger.Info("[Item Info] This mod supports other languages! \n" +
 		                        "Мод поддерживает другие языки! \n" +
 		                        "Este mod es compatible con otros idiomas! \n" +
 		                        "Ten mod obsługuje inne języki! \n" +
 		                        "English, Russian, Spanish, Korean, French, Chinese, Japanese and German are fully translated.\n" +
-		                        "Hide this message in config.json",
-			    LogTextColor.Black,
-			    LogBackgroundColor.White);
+		                        "Hide this message in config.json");
 		    
-		    logger.LogWithColor("[Item Info] Your selected language is \""+ UserLocale +". \n" +
+		    logger.Info("[Item Info] Your selected language is \""+ UserLocale +". \n" +
 		                        "You can now customise it in Item Info config.json file. \n" +
 		                        "Looking for translators, PM me! \n" +
-		                        "Translation debug mode is available in translations.json",
-			    LogTextColor.Black,
-			    LogBackgroundColor.Green);
+		                        "Translation debug mode is available in translations.json");
 	    }
 
 	    if (Translation.ModTranslationDebug.Enabled)
